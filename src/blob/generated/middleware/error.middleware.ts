@@ -91,51 +91,44 @@ export default function errorMiddleware(
 
     if (err.contentType && req.getMethod() !== "HEAD") {
       logger.error(
-        `ErrorMiddleware: Method is HEAD, skipping content type: ${err.contentType} and HTTP body: ${JSON.stringify(err.body)} `,
+        `ErrorMiddleware: Set content type: ${err.contentType}`,
         context.contextId
       );
-    }
-    else {
-      if (err.contentType) {
-        logger.error(
-          `ErrorMiddleware: Set content type: ${err.contentType}`,
-          context.contextId
-        );
-        res.setContentType(err.contentType);
-      }
-
-      logger.error(
-        `ErrorMiddleware: Set HTTP body: ${JSON.stringify(err.body)}`,
-        context.contextId
-      );
-      if (err.body && req.getMethod() !== "HEAD") {
-        res.getBodyStream().write(err.body);
-      }
-    } else if (err instanceof Error) {
-      logger.error(
-        `ErrorMiddleware: Received an error, fill error information to HTTP response`,
-        context.contextId
-      );
-      logger.error(
-        `ErrorMiddleware: ErrorName=${err.name} ErrorMessage=${
-        err.message
-        } ErrorStack=${JSON.stringify(err.stack)}`,
-        context.contextId
-      );
-      logger.error(`ErrorMiddleware: Set HTTP code: ${500}`, context.contextId);
-      res.setStatusCode(500);
-
-      // logger.error(
-      //   `ErrorMiddleware: Set error message: ${err.message}`,
-      //   context.contextID
-      // );
-      // res.getBodyStream().write(err.message);
-    } else {
-      logger.warn(
-        `ErrorMiddleware: Received unhandled error object`,
-        context.contextId
-      );
+      res.setContentType(err.contentType);
     }
 
-    next();
+    logger.error(
+      `ErrorMiddleware: Set HTTP body: ${JSON.stringify(err.body)}`,
+      context.contextId
+    );
+    if (err.body && req.getMethod() !== "HEAD") {
+      res.getBodyStream().write(err.body);
+    }
+  } else if (err instanceof Error) {
+    logger.error(
+      `ErrorMiddleware: Received an error, fill error information to HTTP response`,
+      context.contextId
+    );
+    logger.error(
+      `ErrorMiddleware: ErrorName=${err.name} ErrorMessage=${
+      err.message
+      } ErrorStack=${JSON.stringify(err.stack)}`,
+      context.contextId
+    );
+    logger.error(`ErrorMiddleware: Set HTTP code: ${500}`, context.contextId);
+    res.setStatusCode(500);
+
+    // logger.error(
+    //   `ErrorMiddleware: Set error message: ${err.message}`,
+    //   context.contextID
+    // );
+    // res.getBodyStream().write(err.message);
+  } else {
+    logger.warn(
+      `ErrorMiddleware: Received unhandled error object`,
+      context.contextId
+    );
   }
+
+  next();
+}
