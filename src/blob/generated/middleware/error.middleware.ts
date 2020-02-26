@@ -47,9 +47,9 @@ export default function errorMiddleware(
 
     logger.error(
       `ErrorMiddleware: ErrorName=${err.name} ErrorMessage=${
-        err.message
+      err.message
       }  ErrorHTTPStatusCode=${err.statusCode} ErrorHTTPStatusMessage=${
-        err.statusMessage
+      err.statusMessage
       } ErrorHTTPHeaders=${JSON.stringify(
         err.headers
       )} ErrorHTTPBody=${JSON.stringify(err.body)} ErrorStack=${JSON.stringify(
@@ -87,20 +87,32 @@ export default function errorMiddleware(
       }
     }
 
-    if (err.contentType) {
+    var request = context.request;
+    var method = (request == null || request == undefined) ? null : request.getMethod();
+
+    if (method === 'HEAD') {
+      console.log("It's a HEAD");
       logger.error(
-        `ErrorMiddleware: Set content type: ${err.contentType}`,
+        `ErrorMiddleware: Method is HEAD, skipping content type: ${err.contentType} and HTTP body: ${JSON.stringify(err.body)} `,
         context.contextId
       );
-      res.setContentType(err.contentType);
     }
+    else {
+      if (err.contentType) {
+        logger.error(
+          `ErrorMiddleware: Set content type: ${err.contentType}`,
+          context.contextId
+        );
+        res.setContentType(err.contentType);
+      }
 
-    logger.error(
-      `ErrorMiddleware: Set HTTP body: ${JSON.stringify(err.body)}`,
-      context.contextId
-    );
-    if (err.body) {
-      res.getBodyStream().write(err.body);
+      logger.error(
+        `ErrorMiddleware: Set HTTP body: ${JSON.stringify(err.body)}`,
+        context.contextId
+      );
+      if (err.body) {
+        res.getBodyStream().write(err.body);
+      }
     }
   } else if (err instanceof Error) {
     logger.error(
@@ -109,7 +121,7 @@ export default function errorMiddleware(
     );
     logger.error(
       `ErrorMiddleware: ErrorName=${err.name} ErrorMessage=${
-        err.message
+      err.message
       } ErrorStack=${JSON.stringify(err.stack)}`,
       context.contextId
     );

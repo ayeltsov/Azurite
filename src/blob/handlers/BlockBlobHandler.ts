@@ -162,6 +162,7 @@ export default class BlockBlobHandler extends BaseHandler
     const blobName = blobCtx.blob!;
     const date = blobCtx.startTime!;
 
+    blockId = blockId.trimEnd();
     this.validateBlockId(blockId, blobCtx);
 
     await this.metadataStore.checkContainerExist(
@@ -257,7 +258,7 @@ export default class BlockBlobHandler extends BaseHandler
     // TODO: What happens when committedBlocks and uncommittedBlocks contains same block ID?
     if (parsed !== undefined && parsed.$$ instanceof Array) {
       for (const block of parsed.$$) {
-        const blockID: string | undefined = block._;
+        const blockID: string | undefined = block._.trimEnd();
         const blockCommitType: string | undefined = block["#name"];
 
         if (blockID === undefined || blockCommitType === undefined) {
