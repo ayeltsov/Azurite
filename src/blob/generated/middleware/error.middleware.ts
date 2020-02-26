@@ -1,5 +1,6 @@
 import Context from "../Context";
 import MiddlewareError from "../errors/MiddlewareError";
+import IRequest from "../IRequest";
 import IResponse from "../IResponse";
 import { NextFunction } from "../MiddlewareFactory";
 import ILogger from "../utils/ILogger";
@@ -16,7 +17,7 @@ import ILogger from "../utils/ILogger";
  * @export
  * @param {Context} context
  * @param {(MiddlewareError | Error)} err A MiddlewareError or Error object
- * @param {Request} _req An express compatible Request object
+ * @param {Request} req An express compatible Request object
  * @param {Response} res An express compatible Response object
  * @param {NextFunction} next An express middleware next callback
  * @param {ILogger} logger A valid logger
@@ -25,6 +26,7 @@ import ILogger from "../utils/ILogger";
 export default function errorMiddleware(
   context: Context,
   err: MiddlewareError | Error,
+  req: IRequest,
   res: IResponse,
   next: NextFunction,
   logger: ILogger
@@ -87,11 +89,7 @@ export default function errorMiddleware(
       }
     }
 
-    var request = context.request;
-    var method = (request == null || request == undefined) ? null : request.getMethod();
-
-    if (method === 'HEAD') {
-      console.log("It's a HEAD");
+    if (err.contentType && req.getMethod() !== "HEAD") {
       logger.error(
         `ErrorMiddleware: Method is HEAD, skipping content type: ${err.contentType} and HTTP body: ${JSON.stringify(err.body)} `,
         context.contextId
@@ -110,35 +108,34 @@ export default function errorMiddleware(
         `ErrorMiddleware: Set HTTP body: ${JSON.stringify(err.body)}`,
         context.contextId
       );
-      if (err.body) {
+      if (err.body && req.getMethod() !== "HEAD") {
         res.getBodyStream().write(err.body);
       }
+    } else if (err instanceof Error) {
+      logger.error(
+        `ErrorMiddleware: Received an error, fill error information to HTTP response`,
+        context.contextId
+      );
+      logger.error(
+        `ErrorMiddleware: ErrorName=${err.name} ErrorMessage=${
+        err.message
+        } ErrorStack=${JSON.stringify(err.stack)}`,
+        context.contextId
+      );
+      logger.error(`ErrorMiddleware: Set HTTP code: ${500}`, context.contextId);
+      res.setStatusCode(500);
+
+      // logger.error(
+      //   `ErrorMiddleware: Set error message: ${err.message}`,
+      //   context.contextID
+      // );
+      // res.getBodyStream().write(err.message);
+    } else {
+      logger.warn(
+        `ErrorMiddleware: Received unhandled error object`,
+        context.contextId
+      );
     }
-  } else if (err instanceof Error) {
-    logger.error(
-      `ErrorMiddleware: Received an error, fill error information to HTTP response`,
-      context.contextId
-    );
-    logger.error(
-      `ErrorMiddleware: ErrorName=${err.name} ErrorMessage=${
-      err.message
-      } ErrorStack=${JSON.stringify(err.stack)}`,
-      context.contextId
-    );
-    logger.error(`ErrorMiddleware: Set HTTP code: ${500}`, context.contextId);
-    res.setStatusCode(500);
 
-    // logger.error(
-    //   `ErrorMiddleware: Set error message: ${err.message}`,
-    //   context.contextID
-    // );
-    // res.getBodyStream().write(err.message);
-  } else {
-    logger.warn(
-      `ErrorMiddleware: Received unhandled error object`,
-      context.contextId
-    );
+    next();
   }
-
-  next();
-}
