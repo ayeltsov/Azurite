@@ -47,7 +47,14 @@
       "name": "Azurite Blob Service - Loki",
       "cwd": "${workspaceFolder}",
       "runtimeArgs": ["-r", "ts-node/register"],
-      "args": ["${workspaceFolder}/src/blob/main.ts", "-d", "debug.log", "-L"],
+      "args": [
+        "${workspaceFolder}/src/blob/main.ts",
+        "-d",
+        "debug.log",
+        "-L",
+        "--blobPort",
+        "11000"
+      ],
       "env": {
         "AZURITE_ACCOUNTS": ""
       },
