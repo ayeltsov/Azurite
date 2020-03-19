@@ -53,10 +53,12 @@
         "debug.log",
         "-L",
         "--blobPort",
-        "11000"
+        "11000",
+        "--blobHost",
+        "127.0.0.1"
       ],
       "env": {
-        "AZURITE_ACCOUNTS": ""
+        "AZURITE_ACCOUNTS": "xdboneboxtenantstorage03:TXlLZXk=:TXlLZXk="
       },
       "outputCapture": "std"
     },

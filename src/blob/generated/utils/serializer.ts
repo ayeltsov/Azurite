@@ -1,6 +1,7 @@
 import * as msRest from "@azure/ms-rest-js";
 
 import * as Mappers from "../artifacts/mappers";
+const peek = require('buffer-peek-stream').promise;
 import Context, { IHandlerParameters } from "../Context";
 import IRequest from "../IRequest";
 import IResponse from "../IResponse";
@@ -177,19 +178,48 @@ export async function deserialize(
   return parameters;
 }
 
+export function peekEncoding(
+  fileStream: NodeJS.ReadableStream
+): Promise<[string, NodeJS.ReadableStream]> {
+  return new Promise((resolve, reject) => {
+    peek(fileStream, 32, (err: Error, data: Buffer, outputStream: NodeJS.ReadableStream) => {
+      if (err) return reject(err)
+      let encoding: string = "";
+      if(data.length >= 4 && data[0] == 0 && data[3] == 0)
+      {
+        encoding = "ucs2"
+      }
+      resolve([encoding, outputStream]);
+    })
+  })
+}
+
 async function readRequestIntoText(req: IRequest): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string>(async (resolve, reject) => {
+
     const segments: string[] = [];
     const bodyStream = req.getBodyStream();
-    bodyStream.setEncoding("ucs2");
-    bodyStream.on("data", buffer => {
+
+    //const [encoding, outputStream] = await peekEncoding(bodyStream);
+
+    const[data, outputStream] = await peek(bodyStream, 4);
+
+     let encoding: string = "";
+     if(data.length >= 4 && data[1] == 0 && data[3] == 0)
+     {
+       encoding = "ucs2"
+     }
+
+    outputStream.setEncoding(encoding);
+    outputStream.on("data", (buffer: string) => {
       segments.push(buffer);
     });
-    bodyStream.on("error", reject);
-    bodyStream.on("end", () => {
+    outputStream.on("error", reject);
+    outputStream.on("end", () => {
       const joined = segments.join("");
       resolve(joined);
     });
+    await outputStream;
   });
 }
 

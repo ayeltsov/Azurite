@@ -29,4 +29,4 @@ export const DEFAULT_SQL_OPTIONS = {
 // http[s]://devstoreaccount1.localhost[:port]/container/path/blob.dat
 // (as opposed to default emulator style http[s]://hostname[:port]/devstoreaccount1/container/path/blob.dat
 // When URL's hostname ends with .localhost, we assume user wants to use production-style URL format.
-export const PRODUCTION_STYLE_URL_HOSTNAME = ".localhost";
+export const PRODUCTION_STYLE_URL_HOSTNAME = ".blob.core.windows.net";
