@@ -1,4 +1,5 @@
 import IExtentStore from "../../common/persistence/IExtentStore";
+import { convertRawHeadersToMetadata } from "../../common/utils/utils";
 import BlobStorageContext from "../context/BlobStorageContext";
 import NotImplementedError from "../errors/NotImplementedError";
 import StorageErrorFactory from "../errors/StorageErrorFactory";
@@ -96,10 +97,15 @@ export default class PageBlobHandler extends BaseHandler
     //   );
     // }
 
+    // Preserve metadata key case
+    const metadata = convertRawHeadersToMetadata(
+      blobCtx.request!.getRawHeaders()
+    );
+
     const etag = newEtag();
     const blob: BlobModel = {
       deleted: false,
-      metadata: options.metadata,
+      metadata,
       accountName,
       containerName,
       name: blobName,
@@ -137,7 +143,8 @@ export default class PageBlobHandler extends BaseHandler
     await this.metadataStore.createBlob(
       context,
       blob,
-      options.leaseAccessConditions
+      options.leaseAccessConditions,
+      options.modifiedAccessConditions
     );
 
     const response: Models.PageBlobCreateResponse = {
@@ -228,7 +235,9 @@ export default class PageBlobHandler extends BaseHandler
       start,
       end,
       persistency,
-      options.leaseAccessConditions
+      options.leaseAccessConditions,
+      options.modifiedAccessConditions,
+      options.sequenceNumberAccessConditions
     );
 
     const response: Models.PageBlobUploadPagesResponse = {
@@ -297,7 +306,9 @@ export default class PageBlobHandler extends BaseHandler
       blob,
       start,
       end,
-      options.leaseAccessConditions
+      options.leaseAccessConditions,
+      options.modifiedAccessConditions,
+      options.sequenceNumberAccessConditions
     );
 
     const response: Models.PageBlobClearPagesResponse = {
@@ -331,7 +342,8 @@ export default class PageBlobHandler extends BaseHandler
       containerName,
       blobName,
       options.snapshot,
-      options.leaseAccessConditions
+      options.leaseAccessConditions,
+      options.modifiedAccessConditions
     );
 
     if (blob.properties.blobType !== Models.BlobType.PageBlob) {
@@ -403,7 +415,8 @@ export default class PageBlobHandler extends BaseHandler
       containerName,
       blobName,
       blobContentLength,
-      options.leaseAccessConditions
+      options.leaseAccessConditions,
+      options.modifiedAccessConditions
     );
 
     const response: Models.PageBlobResizeResponse = {
@@ -438,7 +451,8 @@ export default class PageBlobHandler extends BaseHandler
       blobName,
       sequenceNumberAction,
       options.blobSequenceNumber,
-      options.leaseAccessConditions
+      options.leaseAccessConditions,
+      options.modifiedAccessConditions
     );
 
     const response: Models.PageBlobUpdateSequenceNumberResponse = {
