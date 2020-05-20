@@ -43,7 +43,6 @@
     "@types/args": "^3.0.0",
     "@types/async": "^3.0.1",
     "@types/bluebird": "^3.5.27",
-    "@types/node-buffer-peek-stream": "1.1.0",
     "@types/etag": "^1.8.0",
     "@types/express": "^4.16.0",
     "@types/lokijs": "^1.5.2",
